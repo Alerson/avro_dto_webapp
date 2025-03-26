@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+// Language switching functionality<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -50,6 +50,9 @@
     }
     .translation-toggle {
       cursor: pointer;
+    }
+    .app-name {
+      font-weight: bold;
     }
   </style>
 </head>
@@ -197,15 +200,19 @@
     });
 
     // Language switching functionality
+    // Language switching functionality
     function setLanguage(lang) {
       document.documentElement.lang = lang;
       localStorage.setItem('preferredLanguage', lang);
       
       document.querySelectorAll('[data-en], [data-pt]').forEach(element => {
-        if (element.tagName === 'SPAN') {
-          element.innerHTML = element.getAttribute(`data-${lang}`);
+        const text = element.getAttribute(`data-${lang}`);
+        if (text && text.includes('Avro to DTO Generator')) {
+          // Adiciona o negrito para o nome do aplicativo
+          const appName = lang === 'en' ? 'Avro to DTO Generator' : 'Avro to DTO Generator';
+          element.innerHTML = text.replace(appName, `<span class="fw-bold">${appName}</span>`);
         } else {
-          element.textContent = element.getAttribute(`data-${lang}`);
+          element.textContent = text;
         }
       });
       
