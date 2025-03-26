@@ -90,7 +90,7 @@
       <div class="card-body">
         <h3 class="card-title"><i class="fas fa-info-circle text-primary me-2"></i><span data-en="About this application" data-pt="Sobre esta aplicação">About this application</span></h3>
         <p data-en="The <strong>Avro to DTO Generator</strong> allows you to easily convert your Avro schemas into Java DTO classes suitable for use in your projects."
-           data-pt="O <strong>Avro to DTO Generator</strong> permite converter facilmente seus esquemas Avro em classes Java DTO adequadas para uso em seus projetos.">
+           data-pt="    O <strong>Avro to DTO Generator</strong> permite converter facilmente seus esquemas Avro em classes Java DTO adequadas para uso em seus projetos.">
           The <strong>Avro to DTO Generator</strong> allows you to easily convert your Avro schemas into Java DTO classes suitable for use in your projects.
         </p>
         <p>
@@ -202,7 +202,11 @@
       localStorage.setItem('preferredLanguage', lang);
       
       document.querySelectorAll('[data-en], [data-pt]').forEach(element => {
-        element.textContent = element.getAttribute(`data-${lang}`);
+        if (element.tagName === 'SPAN') {
+          element.innerHTML = element.getAttribute(`data-${lang}`);
+        } else {
+          element.textContent = element.getAttribute(`data-${lang}`);
+        }
       });
       
       // Update active button state
