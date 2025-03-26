@@ -19,9 +19,54 @@
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
       border: none;
     }
+    .language-toggle {
+      position: absolute;
+      top: 15px;
+      left: 15px;
+    }
+    .mode-toggle {
+      position: absolute;
+      top: 15px;
+      left: 100px;
+    }
+    [data-bs-theme="dark"] {
+      --bs-body-bg: #121212;
+      --bs-body-color: #e0e0e0;
+    }
+    [data-bs-theme="dark"] .card {
+      background-color: #1e1e1e;
+      color: #e0e0e0;
+    }
+    [data-bs-theme="dark"] .form-control {
+      background-color: #333;
+      color: #e0e0e0;
+      border-color: #444;
+    }
+    [data-bs-theme="dark"] .form-text {
+      color: #aaa;
+    }
+    [data-bs-theme="dark"] .bg-light {
+      background-color: #121212 !important;
+    }
+    .translation-toggle {
+      cursor: pointer;
+    }
   </style>
 </head>
 <body class="bg-light">
+  <!-- Language Toggle -->
+  <div class="language-toggle btn-group" role="group">
+    <button type="button" class="btn btn-sm btn-outline-primary" onclick="setLanguage('en')" id="en-btn">EN</button>
+    <button type="button" class="btn btn-sm btn-outline-primary" onclick="setLanguage('pt')" id="pt-btn">PT</button>
+  </div>
+
+  <!-- Dark Mode Toggle -->
+  <div class="mode-toggle">
+    <button type="button" class="btn btn-sm btn-outline-secondary" id="theme-toggle">
+      <i class="fas fa-moon" id="theme-icon"></i>
+    </button>
+  </div>
+
   <!-- GitHub corner -->
   <a href="https://github.com/Alerson/avro_to_dto_python" class="github-corner" target="_blank">
     <svg width="80" height="80" viewBox="0 0 250 250" style="fill:#151513; color:#fff; position: absolute; top: 0; border: 0; right: 0;">
@@ -34,35 +79,36 @@
   <div class="container py-5">
     <!-- App Description -->
     <div class="app-description text-center mb-4">
-      <h1 class="display-5 fw-bold">Avro to DTO Generator</h1>
-      <p class="lead">
-        Esta aplicação web converte esquemas Avro (.avsc) em classes Java DTO (Data Transfer Object).
+      <h1 class="display-5 fw-bold" data-en="Avro to DTO Generator" data-pt="Gerador de DTO a partir de Avro">Avro to DTO Generator</h1>
+      <p class="lead" data-en="This web application converts Avro schemas (.avsc) into Java DTO (Data Transfer Object) classes." data-pt="Esta aplicação web converte esquemas Avro (.avsc) em classes Java DTO (Data Transfer Object).">
+        This web application converts Avro schemas (.avsc) into Java DTO (Data Transfer Object) classes.
       </p>
     </div>
 
     <!-- Info Card -->
     <div class="card mb-4 shadow-sm">
       <div class="card-body">
-        <h3 class="card-title"><i class="fas fa-info-circle text-primary me-2"></i>Sobre esta aplicação</h3>
-        <p>
-          O <strong>Avro to DTO Generator</strong> permite converter facilmente seus esquemas Avro em classes Java DTO adequadas para uso em seus projetos.
+        <h3 class="card-title"><i class="fas fa-info-circle text-primary me-2"></i><span data-en="About this application" data-pt="Sobre esta aplicação">About this application</span></h3>
+        <p data-en="The <strong>Avro to DTO Generator</strong> allows you to easily convert your Avro schemas into Java DTO classes suitable for use in your projects."
+           data-pt="O <strong>Avro to DTO Generator</strong> permite converter facilmente seus esquemas Avro em classes Java DTO adequadas para uso em seus projetos.">
+          The <strong>Avro to DTO Generator</strong> allows you to easily convert your Avro schemas into Java DTO classes suitable for use in your projects.
         </p>
         <p>
-          <strong>Como usar:</strong>
+          <strong data-en="How to use:" data-pt="Como usar:">How to use:</strong>
         </p>
         <ol>
-          <li>Faça upload de um arquivo de esquema Avro (.avsc)</li>
-          <li>Clique em "Gerar DTO"</li>
-          <li>O arquivo Java será gerado e baixado automaticamente para seu computador</li>
+          <li data-en="Upload an Avro schema file (.avsc)" data-pt="Faça upload de um arquivo de esquema Avro (.avsc)">Upload an Avro schema file (.avsc)</li>
+          <li data-en="Click on &quot;Generate DTO&quot;" data-pt="Clique em &quot;Gerar DTO&quot;">Click on "Generate DTO"</li>
+          <li data-en="The Java file will be automatically generated and downloaded to your computer" data-pt="O arquivo Java será gerado e baixado automaticamente para seu computador">The Java file will be automatically generated and downloaded to your computer</li>
         </ol>
         <p class="mb-0">
-          <strong>Recursos:</strong>
+          <strong data-en="Features:" data-pt="Recursos:">Features:</strong>
         </p>
         <ul>
-          <li>Converte tipos Avro em tipos Java apropriados</li>
-          <li>Suporta registros aninhados e enumerações</li>
-          <li>Gera getters e setters</li>
-          <li>Gera construtores</li>
+          <li data-en="Converts Avro types to appropriate Java types" data-pt="Converte tipos Avro em tipos Java apropriados">Converts Avro types to appropriate Java types</li>
+          <li data-en="Supports nested records and enumerations" data-pt="Suporta registros aninhados e enumerações">Supports nested records and enumerations</li>
+          <li data-en="Generates getters and setters" data-pt="Gera getters e setters">Generates getters and setters</li>
+          <li data-en="Generates constructors" data-pt="Gera construtores">Generates constructors</li>
         </ul>
       </div>
     </div>
@@ -70,18 +116,18 @@
     <!-- Upload Form Card -->
     <div class="card shadow-sm">
       <div class="card-body">
-        <h2 class="card-title mb-4">Upload de Esquema Avro</h2>
+        <h2 class="card-title mb-4" data-en="Avro Schema Upload" data-pt="Upload de Esquema Avro">Avro Schema Upload</h2>
 
         <form id="upload-form">
           <div class="mb-3">
-            <label for="file-input" class="form-label">Selecione um arquivo de esquema Avro (.avsc)</label>
+            <label for="file-input" class="form-label" data-en="Select an Avro schema file (.avsc)" data-pt="Selecione um arquivo de esquema Avro (.avsc)">Select an Avro schema file (.avsc)</label>
             <input type="file" class="form-control" id="file-input" name="file" accept=".avsc" required />
-            <div class="form-text">O arquivo deve ser um esquema Avro válido no formato JSON.</div>
+            <div class="form-text" data-en="The file must be a valid Avro schema in JSON format." data-pt="O arquivo deve ser um esquema Avro válido no formato JSON.">The file must be a valid Avro schema in JSON format.</div>
           </div>
 
           <div class="text-center">
             <button type="submit" class="btn btn-primary">
-              <i class="fas fa-sync-alt me-2"></i>Gerar DTO
+              <i class="fas fa-sync-alt me-2"></i><span data-en="Generate DTO" data-pt="Gerar DTO">Generate DTO</span>
             </button>
           </div>
         </form>
@@ -99,9 +145,9 @@
       </p>
       <p>
         <small>
-          Desenvolvido com <i class="fas fa-heart text-danger"></i> | 
+          <span data-en="Developed with" data-pt="Desenvolvido com">Developed with</span> <i class="fas fa-heart text-danger"></i> | 
           <a href="https://github.com/Alerson/avro_to_dto_python" target="_blank" class="text-decoration-none">
-            <i class="fab fa-github"></i> Código-fonte no GitHub
+            <i class="fab fa-github"></i> <span data-en="Source code on GitHub" data-pt="Código-fonte no GitHub">Source code on GitHub</span>
           </a>
         </small>
       </p>
@@ -109,6 +155,7 @@
   </div>
 
   <script>
+    // Form handling
     const form = document.getElementById("upload-form");
     const message = document.getElementById("message");
 
@@ -119,7 +166,9 @@
       const formData = new FormData();
       formData.append("file", file);
 
-      message.innerHTML = '<div class="spinner-border text-primary" role="status"></div> <span>Gerando DTO...</span>';
+      const language = document.documentElement.lang;
+      const loadingText = language === 'pt' ? 'Gerando DTO...' : 'Generating DTO...';
+      message.innerHTML = `<div class="spinner-border text-primary" role="status"></div> <span>${loadingText}</span>`;
       
       try {
         const response = await fetch("/generate-dto", {
@@ -133,14 +182,67 @@
           link.href = window.URL.createObjectURL(blob);
           link.download = file.name.replace(".avsc", "DTO.java");
           link.click();
-          message.innerHTML = '<div class="alert alert-success"><i class="fas fa-check-circle me-2"></i>DTO gerado com sucesso!</div>';
+          
+          const successText = language === 'pt' ? 'DTO gerado com sucesso!' : 'DTO successfully generated!';
+          message.innerHTML = `<div class="alert alert-success"><i class="fas fa-check-circle me-2"></i>${successText}</div>`;
         } else {
           const error = await response.json();
-          message.innerHTML = `<div class="alert alert-danger"><i class="fas fa-exclamation-circle me-2"></i>Erro: ${error.error}</div>`;
+          const errorPrefix = language === 'pt' ? 'Erro' : 'Error';
+          message.innerHTML = `<div class="alert alert-danger"><i class="fas fa-exclamation-circle me-2"></i>${errorPrefix}: ${error.error}</div>`;
         }
       } catch (err) {
-        message.innerHTML = `<div class="alert alert-danger"><i class="fas fa-exclamation-triangle me-2"></i>Algo deu errado: ${err.message}</div>`;
+        const errorPrefix = language === 'pt' ? 'Algo deu errado' : 'Something went wrong';
+        message.innerHTML = `<div class="alert alert-danger"><i class="fas fa-exclamation-triangle me-2"></i>${errorPrefix}: ${err.message}</div>`;
       }
+    });
+
+    // Language switching functionality
+    function setLanguage(lang) {
+      document.documentElement.lang = lang;
+      localStorage.setItem('preferredLanguage', lang);
+      
+      document.querySelectorAll('[data-en], [data-pt]').forEach(element => {
+        element.textContent = element.getAttribute(`data-${lang}`);
+      });
+      
+      // Update active button state
+      document.getElementById('en-btn').classList.toggle('active', lang === 'en');
+      document.getElementById('pt-btn').classList.toggle('active', lang === 'pt');
+    }
+
+    // Dark mode toggle functionality
+    const themeToggle = document.getElementById('theme-toggle');
+    const themeIcon = document.getElementById('theme-icon');
+
+    function setTheme(theme) {
+      document.documentElement.setAttribute('data-bs-theme', theme);
+      localStorage.setItem('preferredTheme', theme);
+      
+      // Update icon
+      if (theme === 'dark') {
+        themeIcon.classList.remove('fa-moon');
+        themeIcon.classList.add('fa-sun');
+      } else {
+        themeIcon.classList.remove('fa-sun');
+        themeIcon.classList.add('fa-moon');
+      }
+    }
+
+    themeToggle.addEventListener('click', () => {
+      const currentTheme = document.documentElement.getAttribute('data-bs-theme') || 'light';
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      setTheme(newTheme);
+    });
+
+    // Initialize preferences from localStorage
+    document.addEventListener('DOMContentLoaded', () => {
+      // Set language preference
+      const savedLanguage = localStorage.getItem('preferredLanguage') || 'en';
+      setLanguage(savedLanguage);
+      
+      // Set theme preference
+      const savedTheme = localStorage.getItem('preferredTheme') || 'light';
+      setTheme(savedTheme);
     });
   </script>
 </body>
