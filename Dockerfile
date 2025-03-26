@@ -2,4 +2,5 @@ FROM python:3.9-slim
 WORKDIR /app
 COPY . .
 RUN pip install -r requirements.txt
-CMD ["gunicorn", "app:app"]
+EXPOSE 5000
+CMD ["python", "app.py"]
