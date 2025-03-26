@@ -1,24 +1,36 @@
-# 🧾 Avro to DTO Generator Web App
+# 🧾 Avro to DTO Generator
 
-This web application allows users to upload an **Avro Schema (.avsc)** file and instantly generate a corresponding **Java DTO (Data Transfer Object)** class. The generated `.java` file can be downloaded directly from the browser.
+This web application converts Avro schemas (.avsc) into Java DTO (Data Transfer Object) classes. The generated `.java` file can be downloaded directly from the browser.
 
----
+**[🔗 Access the application](https://avro-dto-generator.onrender.com)**
 
 ## ⚙️ Technologies Used
 
 ### 💻 Backend
 - **Python 3**
-- **Flask** — for serving the API endpoints and handling file uploads
+- **Flask** — for serving API endpoints and handling file uploads
 - Custom script (`avro_to_dto.py`) to parse Avro schemas and generate Java code
 
 ### 🌐 Frontend
 - **HTML5**
 - **Bootstrap 5** — for a clean, responsive, and professional UI
-- **Vanilla JavaScript** — to handle form submissions and file downloads
+- **JavaScript** — to handle form submissions and file downloads
+- **Dark Mode Support** — toggle between light and dark modes
+- **Internationalization** — support for English and Portuguese
 
----
+## 🔍 Features
 
-## 🚀 How to Run the App
+- Converts Avro types to appropriate Java types
+- Supports nested records and enumerations
+- Generates getters and setters
+- Generates constructors
+- Supports complex types (arrays, maps, etc.)
+- Properly handles logical types (timestamp, date, etc.)
+
+## 🚀 How to Run Locally
+
+### Prerequisites
+- Python 3.x installed
 
 ### Step 1: Install Python (if not already installed)
 
@@ -35,35 +47,26 @@ python3 --version
 pip3 --version
 ```
 
----
-
-### Step 2: Install Required Python Packages
-
-Navigate to the project folder:
+### Step 2: Clone the Repository
 
 ```bash
+git clone https://github.com/Alerson/avro_dto_webapp.git
 cd avro_dto_webapp
 ```
 
-Then install Flask:
+### Step 3: Install Dependencies
 
 ```bash
-pip3 install flask
+pip3 install -r requirements.txt
 ```
 
----
-
-### Step 3: Run the Application
-
-From the project directory, run:
+### Step 4: Run the Application
 
 ```bash
 python3 app.py
 ```
 
 Visit `http://127.0.0.1:5000/` in your browser.
-
----
 
 ## 📁 Project Structure
 
@@ -76,18 +79,15 @@ avro_dto_webapp/
 │   └── index.html         # Bootstrap-based frontend
 ├── uploads/               # Temporarily stores uploaded files
 ├── output_dto/            # Stores generated Java DTO files
+├── requirements.txt       # Project dependencies
 └── static/                # (Optional) for future CSS/JS
 ```
-
----
 
 ## 📥 How It Works
 
 1. The user uploads a `.avsc` file through the browser.
 2. The Flask backend saves the file, reads the schema, and generates a Java DTO class using `avro_to_dto.py`.
 3. The generated `.java` file is sent back to the browser for download.
-
----
 
 ## ✅ Example Output
 
@@ -103,22 +103,22 @@ Containing:
 - Constructor
 - Nested classes for records and enums
 
----
+## 🌐 Hosting
 
-## 🔒 Notes
+The application is hosted on [Render](https://render.com/) using their free tier. Note that free instances spin down after periods of inactivity, which may cause an initial delay when you access the application.
 
-- Files are saved in temporary folders (`uploads/` and `output_dto/`) which can be cleaned up automatically later.
-- Backend only accepts `.avsc` files and returns `.java` files.
-
----
-
-## 📌 To Do (Optional Enhancements)
+## 📌 Future Improvements
 
 - [ ] Add live preview of generated Java code
 - [ ] Improve file upload UI with drag & drop
 - [ ] Add support for downloading a ZIP of multiple DTOs
-- [ ] Dockerize the app for easier deployment
+- [ ] Improve handling of Avro logical types
+- [ ] Add automated tests
+
+## 🤝 Contributions
+
+Contributions are welcome!
 
 ---
 
-Feel free to modify and improve this project to better suit your needs!
+Developed by [Alerson Rigo](mailto:alerson.rigo@gmail.com) | [GitHub](https://github.com/Alerson)
