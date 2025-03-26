@@ -1,12 +1,12 @@
 import json
 import sys
 import os
-from typing import Any
+from typing import Any, Dict, List, Tuple
 
 def pascal_case(s: str) -> str:
     return ''.join(word.capitalize() for word in s.replace('_', ' ').split())
 
-def avro_type_to_java(avro_type: Any, nested_classes: dict) -> str:
+def avro_type_to_java(avro_type: Any, nested_classes: Dict[str, Any]) -> str:
     if isinstance(avro_type, list):
         non_null = [t for t in avro_type if t != 'null']
         if not non_null:  # Proteção contra listas vazias
@@ -34,13 +34,13 @@ def avro_type_to_java(avro_type: Any, nested_classes: dict) -> str:
         if t == "record":
             name = pascal_case(avro_type["name"]) + "DTO"
             # Usar uma string como chave em vez do dicionário
-            if name not in nested_classes:
-                nested_classes[name] = avro_type
+            # Armazenamos o schema para processamento posterior, não durante a iteração
+            nested_classes[name] = avro_type.copy()  # Importante: usamos uma cópia do dicionário
             return name
         elif t == "enum":
             name = pascal_case(avro_type["name"])
-            if name not in nested_classes:
-                nested_classes[name] = avro_type
+            # Armazenamos o schema para processamento posterior, não durante a iteração
+            nested_classes[name] = avro_type.copy()  # Importante: usamos uma cópia do dicionário
             return name
         elif t == "array":
             return f"List<{avro_type_to_java(avro_type['items'], nested_classes)}>"
@@ -59,7 +59,7 @@ def avro_type_to_java(avro_type: Any, nested_classes: dict) -> str:
         "null": "Void"
     }.get(avro_type, "Object")
 
-def generate_field_code(field: dict, nested_classes: dict) -> (str, str, str):
+def generate_field_code(field: Dict[str, Any], nested_classes: Dict[str, Any]) -> Tuple[str, str, str]:
     name = field["name"]
     java_type = avro_type_to_java(field["type"], nested_classes)
     field_line = f"    private {java_type} {name};"
@@ -75,15 +75,23 @@ def generate_field_code(field: dict, nested_classes: dict) -> (str, str, str):
     
     return field_line, getter, setter
 
-def generate_nested_classes(nested_classes: dict) -> str:
+def generate_nested_classes(nested_classes: Dict[str, Any]) -> str:
     code_blocks = []
-    for class_name, schema in nested_classes.items():
+    
+    # Fazemos uma cópia das chaves para evitar mudanças durante a iteração
+    class_names = list(nested_classes.keys())
+    
+    for class_name in class_names:
+        schema = nested_classes[class_name]
+        
         if schema["type"] == "record":
             fields = schema.get("fields", [])
             lines = [f"    public static class {class_name} {{"]
             constructor_params = []
             constructor_body = []
             getters_setters = []
+            
+            # Processamos cada campo do registro
             for field in fields:
                 field_line, getter, setter = generate_field_code(field, nested_classes)
                 lines.append("        " + field_line.strip())
@@ -111,13 +119,50 @@ def generate_nested_classes(nested_classes: dict) -> str:
 
     return "\n\n".join(code_blocks)
 
-def generate_main_class(schema: dict) -> str:
+def process_all_nested_schemas(schema: Dict[str, Any]) -> Dict[str, Any]:
+    """Pré-processa todos os esquemas aninhados recursivamente."""
+    nested_classes = {}
+    
+    def process_schema(avro_type: Any) -> None:
+        if isinstance(avro_type, list):
+            for t in avro_type:
+                if t != 'null':
+                    process_schema(t)
+        elif isinstance(avro_type, dict):
+            if "type" not in avro_type:
+                return
+                
+            t = avro_type["type"]
+            
+            if t == "record":
+                name = pascal_case(avro_type["name"]) + "DTO"
+                nested_classes[name] = avro_type
+                
+                # Processa campos recursivamente
+                for field in avro_type.get("fields", []):
+                    process_schema(field.get("type"))
+            elif t == "enum":
+                name = pascal_case(avro_type["name"])
+                nested_classes[name] = avro_type
+            elif t == "array":
+                process_schema(avro_type.get("items"))
+            elif t == "map":
+                process_schema(avro_type.get("values"))
+    
+    # Processa o esquema principal
+    for field in schema.get("fields", []):
+        process_schema(field.get("type"))
+        
+    return nested_classes
+
+def generate_main_class(schema: Dict[str, Any]) -> str:
     class_name = pascal_case(schema["name"]) + "DTO"
     fields = schema.get("fields", [])
 
-    imports = set()
-    nested_classes = {}
+    # Pré-processa todos os esquemas aninhados para evitar o problema de modificação durante iteração
+    nested_classes = process_all_nested_schemas(schema)
 
+    imports = set()
     field_lines = []
     constructor_params = []
     constructor_body = []
