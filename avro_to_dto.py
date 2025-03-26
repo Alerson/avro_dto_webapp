@@ -9,12 +9,31 @@ def pascal_case(s: str) -> str:
 def avro_type_to_java(avro_type: Any, nested_classes: dict) -> str:
     if isinstance(avro_type, list):
         non_null = [t for t in avro_type if t != 'null']
+        if not non_null:  # Proteção contra listas vazias
+            return "Object"
         return avro_type_to_java(non_null[0], nested_classes)
 
     if isinstance(avro_type, dict):
+        # Verifica se o dicionário tem a chave "type"
+        if "type" not in avro_type:
+            print(f"Aviso: Dicionário sem chave 'type': {avro_type}")
+            return "Object"
+            
         t = avro_type["type"]
+        
+        # Lidar com tipos lógicos
+        if "logicalType" in avro_type:
+            logical_type = avro_type["logicalType"]
+            if logical_type == "timestamp-millis" or logical_type == "timestamp-micros":
+                return "java.time.Instant"
+            elif logical_type == "date":
+                return "java.time.LocalDate"
+            elif logical_type == "time-millis" or logical_type == "time-micros":
+                return "java.time.LocalTime"
+        
         if t == "record":
             name = pascal_case(avro_type["name"]) + "DTO"
+            # Usar uma string como chave em vez do dicionário
             if name not in nested_classes:
                 nested_classes[name] = avro_type
             return name
@@ -28,13 +47,16 @@ def avro_type_to_java(avro_type: Any, nested_classes: dict) -> str:
         elif t == "map":
             return f"Map<String, {avro_type_to_java(avro_type['values'], nested_classes)}>"
     
+    # Tipos Avro primitivos mapeados para tipos Java
     return {
         "string": "String",
         "int": "int",
         "long": "long",
         "float": "float",
         "double": "double",
-        "boolean": "boolean"
+        "boolean": "boolean",
+        "bytes": "byte[]",
+        "null": "Void"
     }.get(avro_type, "Object")
 
 def generate_field_code(field: dict, nested_classes: dict) -> (str, str, str):
@@ -110,6 +132,8 @@ def generate_main_class(schema: dict) -> str:
             imports.add("import java.util.List;")
         if "Map<" in java_type:
             imports.add("import java.util.Map;")
+        if "java.time." in java_type:
+            imports.add(f"import {java_type};")
         constructor_params.append(f"{java_type} {field_name}")
         constructor_body.append(f"        this.{field_name} = {field_name};")
         getters_setters.append(getter)
@@ -162,4 +186,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
