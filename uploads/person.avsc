@@ -1,0 +1,45 @@
+{
+  "type": "record",
+  "name": "Person",
+  "namespace": "com.example",
+  "fields": [
+    {
+      "name": "firstName",
+      "type": "string"
+    },
+    {
+      "name": "lastName",
+      "type": "string"
+    },
+    {
+      "name": "age",
+      "type": "int"
+    },
+    {
+      "name": "gender",
+      "type": {
+        "type": "enum",
+        "name": "Gender",
+        "symbols": ["MALE", "FEMALE", "OTHER"]
+      }
+    },
+    {
+      "name": "email",
+      "type": ["null", "string"],
+      "default": null
+    },
+    {
+      "name": "address",
+      "type": {
+        "type": "record",
+        "name": "Address",
+        "fields": [
+          { "name": "street", "type": "string" },
+          { "name": "city", "type": "string" },
+          { "name": "state", "type": "string" },
+          { "name": "zipCode", "type": "string" }
+        ]
+      }
+    }
+  ]
+}
