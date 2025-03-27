@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify, send_file, render_template
 import os
 import json
 import traceback
+import re
 from avro_to_dto import generate_main_class, pascal_case
 from werkzeug.utils import secure_filename
 
@@ -10,6 +11,50 @@ UPLOAD_FOLDER = "uploads"
 OUTPUT_FOLDER = "output_dto"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(OUTPUT_FOLDER, exist_ok=True)
+
+def is_valid_avro_schema(schema):
+    """
+    Validates if the provided schema is a valid Avro schema.
+    Basic validation checks if:
+    1. It's a valid JSON
+    2. It has required fields for a record type schema
+    3. It follows basic Avro schema structure
+    """
+    # Check if schema is a dictionary (valid JSON object)
+    if not isinstance(schema, dict):
+        return False, "Schema must be a JSON object"
+    
+    # Check for required fields in an Avro record schema
+    if "type" not in schema:
+        return False, "Schema is missing 'type' field"
+    
+    if schema["type"] != "record":
+        return False, "Schema must have type 'record'"
+    
+    if "name" not in schema:
+        return False, "Schema is missing 'name' field"
+    
+    if not re.match(r'^[A-Za-z_][A-Za-z0-9_]*$', schema["name"]):
+        return False, "Schema name must be a valid identifier"
+    
+    if "fields" not in schema:
+        return False, "Schema is missing 'fields' field"
+    
+    if not isinstance(schema["fields"], list):
+        return False, "Schema 'fields' must be an array"
+    
+    # Check each field
+    for field in schema["fields"]:
+        if not isinstance(field, dict):
+            return False, "Each field must be an object"
+        
+        if "name" not in field:
+            return False, "Field is missing 'name' property"
+        
+        if "type" not in field:
+            return False, "Field is missing 'type' property"
+    
+    return True, "Valid Avro schema"
 
 @app.route('/')
 def index():
@@ -31,19 +76,14 @@ def generate_dto():
         try:
             with open(input_path, 'r') as f:
                 schema = json.load(f)
+            
+            # Validate Avro schema
+            is_valid, message = is_valid_avro_schema(schema)
+            if not is_valid:
+                return jsonify({'error': f'Invalid Avro schema: {message}'}), 400
                 
             print(f"Schema carregado: {schema.get('name', 'unknown')}")
             
-            # Verificando se o schema tem os campos necessários
-            if "name" not in schema:
-                return jsonify({'error': 'Schema inválido: campo "name" não encontrado'}), 400
-            
-            if "type" not in schema or schema["type"] != "record":
-                return jsonify({'error': 'Schema inválido: deve ser do tipo "record"'}), 400
-            
-            if "fields" not in schema:
-                return jsonify({'error': 'Schema inválido: campo "fields" não encontrado'}), 400
-
             java_code = generate_main_class(schema)
             output_filename = pascal_case(schema["name"]) + "DTO.java"
             output_path = os.path.join(OUTPUT_FOLDER, output_filename)
@@ -55,7 +95,7 @@ def generate_dto():
             return send_file(output_path, as_attachment=True)
 
         except json.JSONDecodeError:
-            return jsonify({'error': 'Arquivo não é um JSON válido'}), 400
+            return jsonify({'error': 'The file is not a valid JSON format'}), 400
         except Exception as e:
             error_trace = traceback.format_exc()
             print(f"ERRO durante o processamento: {str(e)}\n{error_trace}")

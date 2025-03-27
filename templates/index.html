@@ -74,6 +74,14 @@
     .app-name {
       font-weight: bold;
     }
+    /* Added styles for info icon tooltip */
+    .info-tooltip {
+      cursor: help;
+      color: #6c757d;
+    }
+    [data-bs-theme="dark"] .info-tooltip {
+      color: #adb5bd;
+    }
   </style>
 </head>
 <body class="bg-light">
@@ -144,9 +152,14 @@
 
         <form id="upload-form">
           <div class="mb-3">
-            <label for="file-input" class="form-label" data-en="Select an Avro schema file (.avsc)" data-pt="Selecione um arquivo de esquema Avro (.avsc)">Select an Avro schema file (.avsc)</label>
+            <label for="file-input" class="form-label" data-en="Select an Avro schema file (.avsc)" data-pt="Selecione um arquivo de esquema Avro (.avsc)">
+              Select an Avro schema file (.avsc)
+              <i class="fas fa-info-circle ms-1" style="color: #6c757d; cursor: help;" title="The file must be a valid Avro schema in JSON format with required fields: type, name, and fields."></i>
+            </label>
             <input type="file" class="form-control" id="file-input" name="file" accept=".avsc" required />
-            <div class="form-text" data-en="The file must be a valid Avro schema in JSON format." data-pt="O arquivo deve ser um esquema Avro válido no formato JSON.">The file must be a valid Avro schema in JSON format.</div>
+            <div class="form-text" data-en="The file must be a valid Avro schema in JSON format." data-pt="O arquivo deve ser um esquema Avro válido no formato JSON.">
+              The file must be a valid Avro schema in JSON format. Valid schemas must have "type": "record", "name", and "fields" properties.
+            </div>
           </div>
 
           <div class="text-center">
@@ -157,6 +170,45 @@
         </form>
 
         <div id="message" class="mt-4 text-center"></div>
+      </div>
+    </div>
+
+    <!-- Schema Format Info Card (new) -->
+    <div class="card mt-4 shadow-sm">
+      <div class="card-body">
+        <h4 class="card-title">
+          <i class="fas fa-code text-success me-2"></i>
+          <span data-en="Valid Schema Format" data-pt="Formato de Esquema Válido">Valid Schema Format</span>
+        </h4>
+        <p data-en="Your Avro schema must be a valid JSON file with the following structure:" 
+           data-pt="Seu esquema Avro deve ser um arquivo JSON válido com a seguinte estrutura:">
+          Your Avro schema must be a valid JSON file with the following structure:
+        </p>
+        <pre class="bg-light p-3 rounded"><code>{
+  "type": "record",
+  "name": "YourSchemaName",
+  "namespace": "your.namespace",
+  "fields": [
+    {
+      "name": "fieldName",
+      "type": "string"
+    },
+    {
+      "name": "anotherField",
+      "type": "int"
+    }
+    // more fields...
+  ]
+}</code></pre>
+        <p data-en="The schema validator checks for:" data-pt="O validador de esquema verifica:">
+          The schema validator checks for:
+        </p>
+        <ul>
+          <li data-en="Valid JSON format" data-pt="Formato JSON válido">Valid JSON format</li>
+          <li data-en="Required 'type' field with value 'record'" data-pt="Campo 'type' obrigatório com valor 'record'">Required 'type' field with value 'record'</li>
+          <li data-en="Required 'name' field with a valid identifier" data-pt="Campo 'name' obrigatório com um identificador válido">Required 'name' field with a valid identifier</li>
+          <li data-en="Required 'fields' array with field objects" data-pt="Array 'fields' obrigatório com objetos de campo">Required 'fields' array with field objects</li>
+        </ul>
       </div>
     </div>
 
@@ -178,49 +230,16 @@
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    // Form handling
-    const form = document.getElementById("upload-form");
-    const message = document.getElementById("message");
-
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const fileInput = document.getElementById("file-input");
-      const file = fileInput.files[0];
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const language = document.documentElement.lang;
-      const loadingText = language === 'pt' ? 'Gerando DTO...' : 'Generating DTO...';
-      message.innerHTML = `<div class="spinner-border text-primary" role="status"></div> <span>${loadingText}</span>`;
-      
-      try {
-        const response = await fetch("/generate-dto", {
-          method: "POST",
-          body: formData
-        });
-
-        if (response.ok) {
-          const blob = await response.blob();
-          const link = document.createElement("a");
-          link.href = window.URL.createObjectURL(blob);
-          link.download = file.name.replace(".avsc", "DTO.java");
-          link.click();
-          
-          const successText = language === 'pt' ? 'DTO gerado com sucesso!' : 'DTO successfully generated!';
-          message.innerHTML = `<div class="alert alert-success"><i class="fas fa-check-circle me-2"></i>${successText}</div>`;
-        } else {
-          const error = await response.json();
-          const errorPrefix = language === 'pt' ? 'Erro' : 'Error';
-          message.innerHTML = `<div class="alert alert-danger"><i class="fas fa-exclamation-circle me-2"></i>${errorPrefix}: ${error.error}</div>`;
-        }
-      } catch (err) {
-        const errorPrefix = language === 'pt' ? 'Algo deu errado' : 'Something went wrong';
-        message.innerHTML = `<div class="alert alert-danger"><i class="fas fa-exclamation-triangle me-2"></i>${errorPrefix}: ${err.message}</div>`;
-      }
+    // Initialize tooltips
+    document.addEventListener('DOMContentLoaded', function() {
+      var tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+      var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+      });
     });
 
-    // Language switching functionality
     // Language switching functionality
     function setLanguage(lang) {
       document.documentElement.lang = lang;
@@ -232,7 +251,7 @@
           // Adiciona o negrito para o nome do aplicativo
           const appName = lang === 'en' ? 'Avro to DTO Generator' : 'Avro to DTO Generator';
           element.innerHTML = text.replace(appName, `<span class="fw-bold">${appName}</span>`);
-        } else {
+        } else if (text) {
           element.textContent = text;
         }
       });
@@ -275,6 +294,133 @@
       // Set theme preference
       const savedTheme = localStorage.getItem('preferredTheme') || 'light';
       setTheme(savedTheme);
+    });
+
+    // Form handling
+    const form = document.getElementById("upload-form");
+    const message = document.getElementById("message");
+    const fileInput = document.getElementById("file-input");
+
+    // Client-side validation function
+    function validateFile(file) {
+      const language = document.documentElement.lang;
+      
+      // Check if a file was selected
+      if (!file) {
+        const noFileText = language === 'pt' ? 'Por favor, selecione um arquivo.' : 'Please select a file.';
+        return { valid: false, message: noFileText };
+      }
+      
+      // Check file extension (.avsc)
+      if (!file.name.toLowerCase().endsWith('.avsc')) {
+        const wrongExtText = language === 'pt' 
+          ? 'O arquivo deve ter a extensão .avsc' 
+          : 'The file must have the .avsc extension';
+        return { valid: false, message: wrongExtText };
+      }
+      
+      // Check file size (max 5MB)
+      const maxSize = 5 * 1024 * 1024; // 5MB
+      if (file.size > maxSize) {
+        const maxSizeText = language === 'pt'
+          ? 'O arquivo é muito grande. Tamanho máximo: 5MB.'
+          : 'The file is too large. Maximum size: 5MB.';
+        return { valid: false, message: maxSizeText };
+      }
+      
+      return { valid: true };
+    }
+
+    // Function to check if file is valid JSON (basic check)
+    async function isValidJSON(file) {
+      const language = document.documentElement.lang;
+      try {
+        const text = await file.text();
+        JSON.parse(text);
+        return { valid: true };
+      } catch (e) {
+        const invalidJsonText = language === 'pt'
+          ? 'O arquivo não é um JSON válido. Verifique a sintaxe do seu arquivo.'
+          : 'The file is not valid JSON. Please check your file syntax.';
+        return { valid: false, message: invalidJsonText };
+      }
+    }
+
+    // File input change handler to provide immediate feedback
+    fileInput.addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      const validation = validateFile(file);
+      
+      if (!validation.valid) {
+        const language = document.documentElement.lang;
+        const errorPrefix = language === 'pt' ? 'Erro de validação' : 'Validation error';
+        message.innerHTML = `<div class="alert alert-warning"><i class="fas fa-exclamation-triangle me-2"></i>${errorPrefix}: ${validation.message}</div>`;
+      } else {
+        // Also check if it's valid JSON
+        const jsonValidation = await isValidJSON(file);
+        if (!jsonValidation.valid) {
+          const language = document.documentElement.lang;
+          const errorPrefix = language === 'pt' ? 'Erro de validação' : 'Validation error';
+          message.innerHTML = `<div class="alert alert-warning"><i class="fas fa-exclamation-triangle me-2"></i>${errorPrefix}: ${jsonValidation.message}</div>`;
+        } else {
+          message.innerHTML = '';
+        }
+      }
+    });
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const file = fileInput.files[0];
+      
+      // Validate file before submission
+      const validation = validateFile(file);
+      if (!validation.valid) {
+        const language = document.documentElement.lang;
+        const errorPrefix = language === 'pt' ? 'Erro de validação' : 'Validation error';
+        message.innerHTML = `<div class="alert alert-warning"><i class="fas fa-exclamation-triangle me-2"></i>${errorPrefix}: ${validation.message}</div>`;
+        return;
+      }
+      
+      // Check if it's valid JSON
+      const jsonValidation = await isValidJSON(file);
+      if (!jsonValidation.valid) {
+        const language = document.documentElement.lang;
+        const errorPrefix = language === 'pt' ? 'Erro de validação' : 'Validation error';
+        message.innerHTML = `<div class="alert alert-warning"><i class="fas fa-exclamation-triangle me-2"></i>${errorPrefix}: ${jsonValidation.message}</div>`;
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const language = document.documentElement.lang;
+      const loadingText = language === 'pt' ? 'Gerando DTO...' : 'Generating DTO...';
+      message.innerHTML = `<div class="spinner-border text-primary" role="status"></div> <span>${loadingText}</span>`;
+      
+      try {
+        const response = await fetch("/generate-dto", {
+          method: "POST",
+          body: formData
+        });
+
+        if (response.ok) {
+          const blob = await response.blob();
+          const link = document.createElement("a");
+          link.href = window.URL.createObjectURL(blob);
+          link.download = file.name.replace(".avsc", "DTO.java");
+          link.click();
+          
+          const successText = language === 'pt' ? 'DTO gerado com sucesso!' : 'DTO successfully generated!';
+          message.innerHTML = `<div class="alert alert-success"><i class="fas fa-check-circle me-2"></i>${successText}</div>`;
+        } else {
+          const error = await response.json();
+          const errorPrefix = language === 'pt' ? 'Erro' : 'Error';
+          message.innerHTML = `<div class="alert alert-danger"><i class="fas fa-exclamation-circle me-2"></i>${errorPrefix}: ${error.error}</div>`;
+        }
+      } catch (err) {
+        const errorPrefix = language === 'pt' ? 'Algo deu errado' : 'Something went wrong';
+        message.innerHTML = `<div class="alert alert-danger"><i class="fas fa-exclamation-triangle me-2"></i>${errorPrefix}: ${err.message}</div>`;
+      }
     });
   </script>
 </body>
